@@ -1,0 +1,509 @@
+%===============================================================================
+% ifacconf.tex 2025-07-31 jpuente  
+% 2022-11-11 jpuente change length of abstract
+% 2025-07-31 jldiez added section on the use of AI
+% Template for IFAC meeting papers
+% Copyright (c) 2025 International Federation of Automatic Control
+%===============================================================================
+\documentclass{ifacconf}
+
+\usepackage{graphicx}      % include this line if your document contains figures
+\usepackage{natbib}        % required for bibliography
+\usepackage{mathtools,amsfonts,amssymb,amstext,thmtools,bbm,enumitem}
+\usepackage{myShorthands}
+\usepackage{url}
+% \usepackage{placeins}
+\pdfminorversion=4
+% \usepackage{color}
+%\def\RG#1{\textcolor{blue}{#1}}
+\def\RG{}
+
+% \newtheorem{theorem}{Theorem}
+% \newtheorem{corollary}{Corollary}
+% \newtheorem{proposition}{Proposition}
+% \newtheorem{assumption}{Assumption}
+% \newtheorem{problem}{Problem}
+% \newtheorem{lemma}{Lemma}
+% \newtheorem{definition}{Definition}
+% \newtheorem{remark}{Remark}
+
+%===============================================================================
+\begin{document}
+\begin{frontmatter}
+
+\title{Multiplicative Controllability \RG{of a one-dimensional Fokker-Planck equation} through the Advection Term 
+%via Transformation to Reaction Term 
+\thanksref{footnoteinfo}} 
+% Title, preferably not more than 10 words.
+
+\thanks[footnoteinfo]{This work is done under the supervision of Roberto Guglielmi, Assistant Professor in the Department of Applied Mathematics at the University of Waterloo, who has supported this work through the Natural Sciences and Engineering Research Council of Canada (NSERC) - RGPIN-2021-02632.}
+
+\author[First]{Yixing (Roger) Gu} 
+% \author[Second]{Roberto Guglielmi} 
+
+\address[First]{Faculty of Mathematics, University of Waterloo, Ontario, Canada (e-mail: yixing.gu@uwaterloo.ca).}
+% \address[Second]{Faculty of Mathematics, University of Waterloo, Ontario, Canada (e-mail: roberto.guglielmi@uwaterloo.ca).}
+
+\begin{abstract}                % Abstract of 50--100 words
+This paper investigates the approximate multiplicative (bilinear) controllability of parabolic partial differential equations, focusing on a special form of the one-dimensional Fokker-Planck equation. 
+We \RG{first derive} some properties of weak derivatives, which are used to extend some results of Sturm-Liouville theory to Sobolev spaces, \RG{and then establish} a relationship between the control through the advection term and the control through the reaction term \RG{by means of a suitable transformation. The proposed method is constructive, and it leads to an implementable} algorithm for finding a bilinear control through the advection term.
+\end{abstract}
+
+\begin{keyword}
+Distributed nonlinear control, Control of distributed parameter systems, Systems theoretic properties of distributed parameter systems, Bilinear control, Diffusion-Advection equations.
+\end{keyword}
+
+\end{frontmatter}
+%===============================================================================
+
+\section{Introduction}
+\RG{The control of partial differential equations (PDE) has garnered growing interest over the last decades, fuelled by its manifold applications to physics and engineering problems, including aeronautics, climate modelling, population dynamics, quantum mechanics, etc.
+Classical results in PDE control theory have mainly focused on an additive structure of the control input, that is, they considered a control term which} is added to the system as an external source or force. In the case of the classical heat equation, an additive control that acts either internally or on the boundary is relatively well-studied, as shown by \cite{zuazua_controllability_2007, bensoussan_representation_2007}.
+
+In contrast, multiplicative (also called bilinear) control has gained increasing attention in recent years. In multiplicative control, the control term is introduced by multiplying the state (and/or its derivative) in the partial differential equation. Notice that in this case, the control effect is linear to both the control and the state itself, while in the additive case, the control term is independent of the state; thus, the name bilinear control.
+
+This type of control is motivated by physical scenarios, where control is achieved by adjusting a parameter of the system (e.g., reaction rate coefficient, diffusion coefficient, or drift velocity field ). For instance, consider the famous Schrödinger equation that governs the movement of a particle in one dimension, see \cite{griffiths_introduction_2005}: $$i\hbar \pardiffs{\Psi}{t} = -\frac{\hbar^2}{2m}\pardiffs{^2\Psi}{x^2} + V\Psi,$$ where $\Psi(x,t)$ represents the wave function, $\hbar$ is a physical constant, $m$ is the mass of the particle, and $V(x,t)$ represents the potential energy given by the surrounding environment. In this case, we can see that the only control with a physical meaning would have to appear in the $V$ term, which multiplies to the state itself.
+
+However, from a mathematical perspective, multiplicative control is far more complex: the control term and the state are non-linearly coupled, and the superposition principle no longer applies. Indeed, it is known that exact global controllability is impossible when the state space has infinite dimension by \cite{ball_controllability_1982}. In particular, exact global controllability is impossible for states in the \textit{square-integrable space} $L^2$, which is natural to a lot of Physics problems; for instance, the wave function in the Schrödinger equation.
+
+One of the earliest results of multiplicative controls of parabolic equations through the reaction term was established by \cite{khapalov_alexander_y_global_2002}. It is shown that global approximate controllability may be achieved for any non-negative initial and target states in a one-dimensional heat equation system, under homogeneous Dirichlet boundary conditions. In addition, the control is time-independent. For more work on multiplicative controls through the reaction term, see \cite{khapalov_global_2010, khayar_controllability_2019, floridia_multiplicative_2020, ouzahra_approximate_2022}.
+
+On the other hand, another recent trend of study in multiplicative controls considers the case where the control may appear in the advection term (first-order differentiation); in particular, a system governed by the Fokker–Planck equation (also known as the Kolmogorov forward equation or diffusion-advection equation in some different contexts):
+$$\pardiffs{u}{t} = - \nabla(\mu u) + \Delta (\cD u),$$ where $\mu(x,t)$ is the drift coefficient and $\cD(x,t)$ is the diffusion coefficient. Since the Fokker–Planck equation naturally arises from stochastic processes  \cite{risken_fokker-planck_1996}, such a control may be useful in many situations from physics to engineering; for instance, the Schrodinger-Bridge problem as in \cite{chen_relation_2016}, etc. The local controllability of the Fokker–Planck equation under different assumptions has been studied in \cite{duprez_bilinear_2022, alabau-boussouira_bilinear_2024}.
+
+The main contribution of our work is Theorem~\ref{Necessary and Sufficient Condition for Transformation}, where a necessary and sufficient condition for the transformation between the controls through the reaction term and the controls through the advection term is established. Moreover, we prove a sufficient condition to reduce the approximate control problem through the advection term to the problem through reaction term (Corollary \ref{Sufficient Condition for Transformation of Approximate Control}). The transformation uses a standard trick in Sturm-Liouville Theory, and the novelty of this work is that the transformation works with weak derivatives in Sobolev Spaces instead of standard (calculus) derivatives, allowing the transformation to be applied to elements in $L^2$ Spaces. To achieve this, a variation of the chain rule for weak derivatives is proven (Proposition \ref{Chain Rule Variation for Weak Derivatives on Bounded Domain}). In this variation, one of the assumptions of the composed function's behaviour over the entire real line is replaced by its behaviour over an open interval, allowing the chain rule to be applied to a much larger class of commonly used functions, for instance, the inverse function $\frac{1}{x}$, the square function $x^2$, and the exponential function $e^x$. Lastly, by applying the result by \cite{khapalov_alexander_y_global_2002}, a recursive pseudo algorithm \ref{alg:recursive control} is given to find an approximate control through the advection term.
+
+The paper is structured as follows:
+\begin{enumerate}[label=\arabic*.]
+\item In Section 2, we will quickly introduce some mathematical preliminaries involved. Following that, we will rigorously define our problem. 
+    \item In Section 3, we will show the weak derivative calculus tools that will be used later. For instance, the product rule, chain rule, and quotient rule.
+    \item In Section 4, we will prove the relationship between control on reaction and the control through the advection term, for both exact controls and approximate controls. A recursive pseudo-algorithm is also given in the end.
+\end{enumerate}
+Due to the limit on space, we will omit some of the proofs. Interested readers may refer to \cite{yixing_multiplicative_2025} for more details. 
+
+\section{Preliminaries}
+\subsection{Sobolev Spaces and Weak Derivatives}
+We will here define the weak derivatives, Sobolev Spaces and state some useful theorems. Detailed treatment can be found in \cite{ziemer_weakly_1989, royden_real_1993, evans_partial_2010}.
+\begin{defn}
+    Let $U \subseteq \bR^n$ be Lebesgue measurable, and $\alpha \in \bN^n$ be an $n$ tuple. For $u,v \in L_{loc}^1(U)$, we say $v$ is the $\alpha\tth$-\textit{weak derivative} of $u$ if $$\forall \phi \in C_c^\infty(U), \int_U uD^\alpha\phi dx = (-1)^\abs{\alpha}\int_U v \phi dx,$$
+    where $D^\alpha \phi := \partial_{x_1}^{\alpha_1} \dots \partial_{x_n}^{\alpha_n}\phi$, and $\abs{\alpha} := \sum_{i=1}^n\alpha_i$.
+
+    If such a $v$ exists, we say that $D^\alpha u = v$ or $u_\alpha = v$ in the weak sense. Otherwise, $u$ does not possess a $\alpha\tth$ weak derivative. One can check that if a weak derivative exists, it is unique almost everywhere. Hereafter, we will abuse the notation and drop the term ``in the weak sense" when the context is clear.
+\end{defn}
+
+\begin{defn}
+    Let $U \subseteq \bR^n$ be Lebesgue measurable, and $k \in \bN$. We define $\Sobo{k}{}{U}$ to be the set of functions whose $\alpha\tth$ weak derivatives exist for all $\abs{\alpha} \leq k$.
+    
+    Let $1 \leq p \leq \infty$. We define the \textit{Sobolev Space} $$\Sobo{k,p}{}{U} := \set{u \in \Sobo{k}{}{U}: \forall \abs{\alpha} \leq k, ~ D^\alpha u\in L^p(U)}.$$
+
+    In particular, we denote $\SoboH{k}{}{U} := \Sobo{k,2}{}{U}$.
+\end{defn}
+
+\begin{defn}
+    Let $k \in \bN, 1 \leq p \leq \infty, u \in \Sobo{k}{}{U}$.
+    The \textit{Sobolev norm} of $u$ is $$\norm{u}_{W^{k,p}(U)} := \rndbracket{\sum_{\abs{\alpha} \leq k}\norm{D^\alpha u}_{\Lp{U}}^p}^{1/p}$$ if $1 \leq p < \infty$, and $$\norm{u}_{W^{k,p}(U)} := \max_{\abs{\alpha} \leq k}\norm{D^\alpha u}_{L^\infty(U)},$$ if $p = \infty$.
+    One can check that these are well-defined norms when restricted to the space $\Sobo{k,p}{}{U}$, if we identify $u,v \in \Leb{1}{loc}{U}$ by $u\sim v \iff u=v$ almost everywhere. Indeed, $u \in \Sobo{k,p}{}{U} \iff \norm{u}_\Sobo{k,p}{}{U} < \infty$. Also, the Sobolev Spaces are Banach with the associated norms.
+\end{defn}
+
+In view of the following result, for any $u \in \Sobo{1,p}{}{a,b}$, we will always consider the continuous representative of it.
+
+\begin{thm}
+    \label{Fundamental Theorem of Lebesgue Integral Calculus with Weak Derivative}
+    Let $p \in [1,\infty]$, and $U = (a,b)$ for some $a,b \in \bR$. Suppose $u \in \Leb{p}{}{a,b}$, then the following are equivalent:
+    \begin{enumerate}[label=\roman*]
+        \item $u \in \Sobo{1,p}{}{a,b}$,
+        \item $u$ has a representative $\bar{u}$ that is absolutely continuous, whose (classical) derivative $\deriv{x}\bar{u}$ (defined almost everywhere) belongs to $\Leb{p}{}{a,b}$,
+        \item $u$ has a representative $\bar{u}$, and there is a Lebesgue integrable function $g \in \Leb{p}{}{a,b}$, such that $\forall x \in [a,b],~ \bar{u}(x) = \bar{u}(a) + \int_a^xg(t)dt.$
+    \end{enumerate}
+    In this case, $\deriv{x}\bar{u} = g$ almost everywhere, and is a representative of $u_x$.
+\begin{pf}
+    This easily follows from the Fundamental Theorem of Lebesgue Integral Calculus \cite[Theorem~6.10~and~Corollary~6.12]{royden_real_1993} and the almost everywhere absolute continuity of Sobolev functions \cite[Theorem~2.1.4]{ziemer_weakly_1989}. A detailed proof may be found in \cite[Corollary~2.1.13]{yixing_multiplicative_2025}. \qed
+\end{pf}
+\end{thm}
+
+\subsection{Problem Description}
+This paper is devoted to establishing a relationship between the following two problems in one-dimension:
+\begin{prob}
+\label{prob:1D-reaction}
+  Given a pair of initial and target states \(y_0, y_d \in L^2(0,1)\), and \(\epsilon>0\),
+  find \(T>0\) and \(\alpha:(0,1)\to\mathbb{R}\), such that the solution of
+  \begin{equation}
+  \label{sys:base_reaction_term}
+    \begin{split}
+      \pardiffs{y}{t} &= y_{xx}+\alpha y, ~\forall t\in(0,T),\\
+      y(0,t)=y(1,t)&=0, ~\forall t\in(0,T),\\
+      y(\cdot,0)&=y_0,
+    \end{split}
+  \end{equation}
+  satisfies \(\|y(\cdot,T)-y_d\|_{L^2(0,1)}<\epsilon\).
+\end{prob}
+
+\begin{prob}
+\label{prob:1D-advection}
+    Given a pair of initial and target states $y_0, y_d \in \Leb{2}{}{0,1}$, and $\epsilon > 0$, find $T > 0$ and $\alpha: (0,1) \to \bR$, such that the solution of
+    \begin{equation}
+  \label{sys:base_advection_term}
+        \begin{split}
+            \pardiffs{y}{t} &= y_{xx}+\alpha y_x, ~\forall t \in (0,T),\\
+            y(0,t)=y(1,t)&=0, ~\forall t \in (0,T),\\
+            y(\cdot, 0) &= y_0,   
+        \end{split}
+    \end{equation} 
+    satisfies \(\|y(\cdot,T)-y_d\|_{L^2(0,1)}<\epsilon\).
+\end{prob}
+When there is a solution for Problem \ref{prob:1D-reaction}, or \ref{prob:1D-advection}, respectively, for any pair of initial and final states, we say that the equation (\ref{eqn:base_reaction_term}), or (\ref{eqn:base_advection_term}) is \textit{approximately controllable} in finite time by means of a bilinear (time-independant) control acting through the reaction term, or the advection term, respectively.
+
+\section{Weak Derivative Calculus}
+\begin{prop}[Product Rule]
+\label{Product Rule}
+    Let $U \subseteq \bR^n$ be Lebesgue measurable. Given any $p \in [1,\infty]$, and any $u \in \Sobo{1,p}{}{U}, ~ v \in \Sobo{1,\infty}{}{U}$, then $uv \in \Sobo{1, p}{}{U}$ with the $i\tth$ weak derivative $\partial_i(uv) = u\partial_iv + v\partial_iu$. Also, $$\norm{uv}_\Sobo{1,p}{}{U} \leq (2n)^\frac{1}{p}\norm{u}_\Sobo{1,p}{}{U}\norm{v}_\Sobo{1, \infty}{}{U}.$$ \cite[Corollary 4.1.18]{weber_introduction_2018}
+\end{prop}
+\begin{prop}[Product Rule 2]
+    Given any $p \in [1,\infty]$, and any $u, v \in \Sobo{1,p}{}{U} \cap \Leb{\infty}{}{U}$, then $uv \in \Sobo{1,p}{}{U} \cap \Leb{\infty}{}{U}$ with the $i\tth$ weak derivative $\partial_i(uv) = u\partial_iv + v\partial_iu$. \cite[Proposition 9.4]{brezis_functional_2011}
+\end{prop}
+By the Product Rule 2, we have the following necessary condition for chain rule.
+\begin{cor}[Quotient Rule - Necessary]
+\label{Quotient Rule - Necessary}
+    For any $p \in [1,\infty]$, and any $u, v \in \Sobo{1,p}{}{U} \cap \Leb{\infty}{}{U}$ \textit{such that} $\frac{u}{v} \in \Sobo{1,p}{}{U} \cap \Leb{\infty}{}{U}$, the $i\tth$ weak derivative is $\partial_i\rndbracket{\frac{u}{v}} = \frac{\partial_iuv - u\partial_iv}{v^2}$. \cite[Corollary~2.5.5]{yixing_multiplicative_2025}
+\end{cor}
+\begin{rem}
+    Notice that in the above result, it is very important that we know $\frac{u}{v} \in \Sobo{1,p}{}{U} \cap \Leb{\infty}{}{U}$ to begin with. i.e. The weak derivative already exists and is in the required space. Thus, this is only a necessary condition. Indeed, consider the counter-example: $u(x)=x^2\sin(1/x),~ v(x)=x^2.$ Both $u,v \in \Sobo{1,1}{}{0,1} \cap \Leb{\infty}{}{0,1}$, but even though their quotient $\frac{u}{v} \in \Leb{\infty}{}{0,1}$, it does not lie in $\Sobo{1,1}{}{0,1}$.
+\end{rem}
+
+\begin{prop}[Local Chain Rule]
+    Given any $p \in [1,\infty]$. Suppose $u \in \Sobo{1,p}{loc}{U}$. Suppose $F \in \Con{1}{}{\bR}$ has bounded derivative $F'$, then the post-composition $F \circ u$ lies in $\Sobo{1,p}{loc}{U}$ and its $i\tth$ weak derivative is given by $\partial_i(F \circ u) = (F' \circ u) \cdot \partial_iu$. \cite[Proposition 4.1.21]{weber_introduction_2018}
+\end{prop}
+\begin{rem}
+    Since $\frac{1}{x}$ is not $\Con{1}{}{\bR}$ (around 0), the quotient rule does not hold in general. Also, although $e^x, x^2 \in \Con{1}{}{\bR}$, they don't have a bounded derivative. There are other more general versions of the chain rule, see \cite{leoni_necessary_2007}, but they all require some behaviours over the entire real line, which are not satisfied by the inverse function.
+\end{rem}
+To this end, we modified the previous chain rule to get the following variations.
+\begin{prop}[Local Chain Rule 2]
+    Let $p \in [1,\infty]$. Suppose $u \in \Sobo{1,p}{loc}{U}$. Suppose $F \in \Con{1}{}{I}$ has bounded derivative $F'$, where $I \subseteq \bR$ is an open interval that contains the closure of $u$'s essential image. i.e. $$\overline{\bigcap\set{J \subseteq \bR: (U \setminus u^{-1}(J)) \text{ has measure } 0}} \subset I.$$ The post-composition $F \circ u$ lies in $\Sobo{1,p}{loc}{U}$ and its $i\tth$ weak derivative is given by $\partial_i(F \circ u) = (F' \circ u) \cdot \partial_iu$. \cite[Proposition 2.5.7]{yixing_multiplicative_2025}
+\begin{pf}
+    Write $I = (a,b)$, where $a < b \in \bR \cup \set{\pm \infty}$.
+    WLOG, by redefining $u$ on a measure zero set, we can assume $u(x) \in J$ for all $x \in U$ for some $\overline{J} \subset I$.
+    
+    Since $\overline{J} \subset I$, we can find some $\delta > 0$, such that $J \subset [a+\delta, b-\delta]$. We achieve our goal by compositing $F$ with the following function, then applying the previous result.
+    $$g(x) := 
+    \begin{cases}
+        x, & a + \delta \leq x \leq b - \delta\\
+        b - \delta e^{\frac{1}{\delta}(b-x-\delta)}, & x \geq b - \delta\\
+        a + \delta e^{\frac{1}{\delta}(x-a-\delta)}, & x \leq a + \delta
+    \end{cases}.$$
+    \qed
+\end{pf}
+\end{prop}
+\begin{rem}
+    Notice that the above proof requires that $I$ is a connected interval, and $\bar{J} \subseteq I$ to find such a $\delta > 0$.
+\end{rem}
+
+We also achieve the following global result. 
+\begin{cor}
+\label{Chain Rule Variation for Weak Derivatives on Bounded Domain}
+    Given any $p \in [1,\infty]$. Suppose $u \in \Sobo{1,p}{}{U}$, where $U \subset \bR^n$ is a bounded open set. Suppose $F \in \Con{1}{}{I}$ has bounded derivative $F'$, where $I \subseteq \bR$ is an open interval that contains the closure of $u$'s essential image. In this case, $F \circ u$ lies in $\Sobo{1,p}{}{U}$ and its $i\tth$ weak derivative is given by $\partial_i(F \circ u) = (F' \circ u) \cdot \partial_iu$. In addition, when $p = \infty$, the above holds true even when $U$ is not assumed to be bounded. \cite[Corollary 2.5.9]{yixing_multiplicative_2025}
+\begin{pf}
+    The first step is to apply the chain rule locally, and achieving the desired formulation for the global weak derivative. What is left is to show that $F \circ u \in \Sobo{1,p}{}{U}$. Namely, we want to show $$\norm{F \circ u}_{\Sobo{1,p}{}{U}} < \infty.$$
+    
+    Let $F'$ be bounded by $M > 0$, we use the chain rule formula to show the estimate $$\norm{F \circ u}_{\Sobo{1,p}{}{U}}^p \leq \norm{F \circ u}_\Leb{p}{}{U}^p + M^p\norm{u}_\Sobo{1,p}{}{U}^p$$ for $p < \infty$, and similar for $p = \infty$. Thus, it suffices to show $F \circ u \in \Leb{p}{}{U}$. 
+
+    Fixing any $s \in I$, we show that for any $t \neq s$, by the Mean Value Theorem, we have some $r \in (s,t)$ such that $$\abs{F(t)} \leq \abs{F(s)} + \abs{F'(r)(t-s)} \leq \abs{F(s)} + M\abs{t} + M\abs{s}.$$
+    Fix $C := \abs{F(s)} + M\abs{s} < \infty$, we thus conclude $$\norm{F \circ u}_\Leb{p}{}{U}^p \leq 2^{p-1}C^p\abs{U} + 2^{p-1}M^p\norm{u}_\Leb{p}{}{U}^p$$ for $p < \infty$ and $$\norm{F \circ u}_\Leb{\infty}{}{U} \leq C + M\norm{u}_\Leb{\infty}{}{U}$$ for $p = \infty$. \qed
+\end{pf}
+\end{cor}
+
+
+
+%% There are a number of predefined theorem-like environments in
+%% ifacconf.cls:
+%%
+%% \begin{thm} ... \end{thm}            % Theorem
+%% \begin{lem} ... \end{lem}            % Lemma
+%% \begin{claim} ... \end{claim}        % Claim
+%% \begin{conj} ... \end{conj}          % Conjecture
+%% \begin{cor} ... \end{cor}            % Corollary
+%% \begin{fact} ... \end{fact}          % Fact
+%% \begin{hypo} ... \end{hypo}          % Hypothesis
+%% \begin{prop} ... \end{prop}          % Proposition
+%% \begin{crit} ... \end{crit}          % Criterion
+
+\section{Control through Advection Term via Transformation to Reaction Term}
+\subsection{Transformation between control through Advection Term and Reaction Term}
+
+\RG{We now establish a suitable transformation that transforms equation~\eqref{eqn:base_reaction_term} in Problem~\ref{prob:1D-reaction} into equation~\eqref{eqn:base_advection_term} in Problem~\ref{prob:1D-advection}, by leveraging a standard trick in Sturm-Liouville theory.} 
+%We now apply the above results with a standard trick in Sturm-Liouville theory, to get a transformation between the two different controls.
+Notice that the weak-derivative versions of the calculus rules from the previous section are necessary, since our target states are equivalent function classes in $L^2(0,1)$.
+
+Hereafter, consider all spatial derivatives below as \textit{weak derivative}s, and all equalities as equalities of \textit{equivalent function classes} in $L^2(0,1)$. Also, consider the time derivative as \textit{any} derivative that satisfies linearity.
+
+\begin{thm}
+    Given $y_0, y_d \in L^2(0,1)$, and $T > 0$. We have
+    \begin{enumerate}[label=\roman*.]
+        \item 
+        Suppose there is a control $\alpha \in \Sobo{1, \infty}{}{0,1}$ such that, \RG{for all $t \in (0,T)$, the solution to 
+        \begin{equation}
+        \label{eqn:base_advection_term}
+            \pardiffs{y}{t} = y_{xx}+\alpha y_x 
+        \end{equation} satisfies
+        \begin{equation}
+        \label{eqn:exact control through Advection Term}
+            y(\cdot, t) \in \SoboH{2}{}{0,1},\             y(\cdot, 0) = y_0,\ 
+            y(\cdot, T) = y_d,
+        \end{equation} 
+        }
+        % $\forall t \in (0,T)$, 
+        % \begin{equation}
+        % \label{eqn:exact control through Advection Term}
+        %     \begin{split}                
+        %     y(\cdot, t) &\in \SoboH{2}{}{0,1},\\ 
+        %     y_t(\cdot, t) &= y_{xx}(\cdot, t)+\alpha y_x(\cdot, t),\\
+        %     y(\cdot, 0) &= y_0,\\
+        %     y(\cdot, T) &= y_d,
+        %     \end{split}
+        % \end{equation} 
+        then there are $\beta := -\frac{1}{4}\alpha^2-\half \alpha_{x} \in \Leb{\infty}{}{0,1}$, and $q := \rndbracket{x \mapsto e^{\half \int_c^x\alpha(\tilde{x})d\tilde{x}}} \in \Sobo{2,\infty}{}{0,1}$, such that
+        \begin{enumerate}
+            \item the solution to
+        \begin{equation}
+        \label{eqn:base_reaction_term}
+            \pardiffs{u}{t} = u_{xx}+\beta u 
+        \end{equation} satisfies
+        \begin{equation}
+        \label{condition:a-control through reaction term}   
+                u(\cdot, t) \in \SoboH{2}{}{0,1},\
+                u(\cdot, 0) = y_0q,\
+                u(\cdot, T) = y_dq,
+        \end{equation}
+            \item 
+            \begin{equation}
+            \label{condition:b-relationship between q and beta}
+                q_{xx} + \beta q = 0,
+            \end{equation} and
+            \item $\frac{1}{q} \in \Sobo{2,\infty}{}{0,1}$.
+        \end{enumerate}
+        In this case, we note $\alpha = 2\frac{q_x}{q}$.
+        \item       
+        Conversely, suppose there are $q \in \Sobo{2, \infty}{}{0,1}, \beta \in \Leb{\infty}{}{0,1}$ such that (a), (b), (c) are satisfied,
+        then the solution to \eqref{eqn:base_advection_term} with control $\alpha := 2\frac{q_x}{q} \in \Sobo{1,\infty}{}{0,1}$ satisfies \eqref{eqn:exact control through Advection Term}.
+    \end{enumerate}
+    When (i) or (ii) holds, $u(x,t) = q(x)y(x,t) ~\ale.$
+    \cite[Theorem~4.1.3]{yixing_multiplicative_2025}
+\begin{pf}
+(i) is relatively standard in Sturm-Liouville theory, and one may check that the conditions for product rule, chain rule, and the Fundamental Theorem of Lebesgue Integral Calculus with Weak Derivative are all satisfied when used.
+    
+We will focus on the proof of (2). 
+Let $u$ be the solution of \eqref{eqn:base_reaction_term}, and define $$y(x, t) := u(x, t)\frac{1}{q(x)}.$$
+By construction, $y(\cdot, 0) = y_0, y(\cdot, T) = y_d$.
+By linearity of the partial derivative, we have $$y_t(\cdot, t) = u_t(\cdot, t)\frac{1}{q(\cdot)},$$
+    since $\frac{1}{q}$ does not depend on $t$.
+    Since $1, q, \frac{1}{q} \in \Sobo{1, \infty}{}{0,1} \cap \Leb{\infty}{}{0,1},$ by the necessary condition of the quotient rule, we have $$\rndbracket{\frac{1}{q}}_x = \frac{0 - q_x}{q^2} = -\frac{q_x}{q^2}.$$ 
+    Also, by product rule on $q_x, \frac{1}{q} \in \Sobo{1, \infty}{}{0,1}$, we have $\frac{q_x}{q} \in \Sobo{1, \infty}{}{0,1}$, and $$\rndbracket{\frac{q_x}{q}}_x = \frac{q_{xx}}{q} - q_x\rndbracket{\frac{1}{q}}_x = \frac{q_{xx}}{q} + \frac{q_x^2}{q^2}.$$
+    Notice that this shows $\alpha := 2\frac{q_x}{q} \in \Sobo{1, \infty}{}{0,1}$ as well.
+    
+    Since $\frac{q_x}{q}$, $q$, and $\rndbracket{\frac{1}{q}}_x = \frac{-\frac{q_x}{q}}{q} \in \Sobo{1, \infty}{}{0,1} \cap \Leb{\infty}{}{0,1}$, by the necessary condition of the quotient rule, we have
+    \begin{equation*}
+        \rndbracket{\frac{1}{q}}_{xx} = \frac{q\rndbracket{\frac{-q_x}{q}}_x - \frac{-q_x}{q}q_x}{q^2}
+        = \frac{2q_x^2-q_{xx}q}{q^3}.
+    \end{equation*}
+    Since $u(\cdot, t) \in \SoboH{2}{}{0,1} \subset \SoboH{1}{}{0,1}$, and $\frac{1}{q} \in \Sobo{1, \infty}{}{0,1}$, by the product rule, we have $y(\cdot, t) \in \SoboH{1}{}{0,1}$, and
+    \begin{multline*}
+        y_x(\cdot, t) = \rndbracket{\frac{1}{q}}_xu(\cdot, t) + \frac{1}{q}u_x(\cdot, t)\\
+        = \frac{u_x(\cdot, t)q - u(\cdot, t)q_x}{q^2}.
+    \end{multline*}
+    Since $u_x(\cdot, t), u(\cdot, t) \in \Sobo{1}{}{0,1}$, $\frac{1}{q}, \rndbracket{\frac{1}{q}}_x \in \Sobo{1, \infty}{}{0,1}$, again by product rule and linearity of weak derivatives, we have $y_x(\cdot, t) \in \SoboH{1}{}{0,1}$, and 
+    \begin{multline*}        
+        y_{xx}(\cdot, t) 
+        = \rndbracket{\frac{1}{q}}_{xx}u(\cdot, t) + 2\rndbracket{\frac{1}{q}}_xu_x(\cdot, t) + \frac{1}{q}u_{xx}(\cdot, t)\\
+        = \frac{2q_x^2-q_{xx}q}{q^3}u(\cdot, t) - 2\frac{q_x}{q^2}u_x(\cdot, t) + \frac{1}{q}u_{xx}(\cdot, t)\\
+        = \rndbracket{u_{xx}(\cdot, t)q - u(\cdot, t)q_{xx}}\frac{1}{q^2} - 2\frac{q_x^2}{q^3}u(\cdot, t) - 2\frac{q_x}{q^2}u_x(\cdot, t).
+    \end{multline*}
+    This shows $y(\cdot, t) \in \SoboH{2}{}{0,1}$.
+    
+    Now take $\alpha = 2\frac{q_x}{q}$, we have 
+    \begin{multline*}
+        y_{xx} + \alpha y_x\\
+        =  \rndbracket{u_{xx}(\cdot, t)q - u(\cdot, t)q_{xx}}\frac{1}{q^2} - 2\frac{q_x^2}{q^3}u(\cdot, t)\\
+        - 2\frac{q_x}{q^2}u_x(\cdot, t) + 2\frac{q_x}{q}\frac{u_x(\cdot, t)q - u(\cdot, t)q_x}{q^2}\\
+        = \frac{u_{xx}(\cdot, t)q - u(\cdot, t)q_{xx}}{q^2}.
+    \end{multline*}
+    Applying the fact that $q_{xx} + \beta q = 0$ and $u_t(\cdot, t) = u_{xx}(\cdot, t) + \beta u(\cdot, t)$, we have 
+ \RG{   \begin{multline*}
+        y_{xx} + \alpha y_x = \frac{u_{xx}(\cdot, t)q - u(\cdot, t)q_{xx}}{q^2}\\
+        = \frac{u_{xx}(\cdot, t) + \beta u(\cdot, t)}{q}
+        = \frac{u_t(\cdot, t)}{q}
+        = y_t(\cdot, t).
+    \end{multline*}
+    }
+    % \begin{align*}
+    %     y_{xx} + \alpha y_x &= \frac{u_{xx}(\cdot, t)q - u(\cdot, t)q_{xx}}{q^2}\\
+    %     &= \frac{u_{xx}(\cdot, t)q + \beta u(\cdot, t)q}{q^2}\\
+    %     &= \frac{u_{xx}(\cdot, t) + \beta u(\cdot, t)}{q}\\
+    %     &= \frac{u_t(\cdot, t)}{q}\\
+    %     &= y_t(\cdot, t).
+    % \end{align*}
+    This completes the proof of (2).\qed
+\end{pf}
+\end{thm}
+
+The above theorem establishes the if and only if relationship between the control of the advection term with (a), (b), and (c). We will now investigate when the latter holds true.
+
+In \cite{khapalov_alexander_y_global_2002}, the author
+suggested the construction of a control to achieve approximate controllability of \eqref{sys:base_reaction_term}:    
+\begin{thm}
+\label{khapalov: reaction control 1D}
+    For any non-negative $u_0,u_d \in L^2(0,1)$ with $u_0 \neq 0$, and $\epsilon > 0$, there is a $T(\epsilon, u_0, u_d) > 0$ and multiplicative control $\alpha \in L^\infty(0,1)$, such that for the solution to (\ref{eqn:base_reaction_term}), we have $\norm{u(\cdot, T) - u_d}_2 \leq \epsilon$.
+\end{thm}
+
+\begin{rem}
+    We note that in general (\ref{eqn:base_reaction_term}) may not always admit a solution in $\SoboH{2}{}{0,1}$. Luckily, with the construction of the above Theorem, we do have $u(\cdot, t) \in \SoboH{2}{}{0,1}$ as the second derivative was explicitly considered in the original paper.
+\end{rem} 
+
+On the other hand, \cite[Theorems 5.1 and 5.3, p. 30]{hale_ordinary_1980} guarantee that for any initial condition that we would like, and any control $\beta$ we have for (a), we can always find a solution $q$ to (b):
+\begin{prop}
+    Suppose $\beta \in \Leb{\infty}{}{0,1}$, then for any $q(0), q_x(0) \in \bR$,
+    there is always a unique solution $q \in \Sobo{2, \infty}{}{0,1}$ satisfying (\ref{condition:b-relationship between q and beta}) in the weak sense, where we consider $q, q_x \in \Sobo{1, \infty}{}{0,1}$ to be their absolute continuous representatives as in Theorem~\ref{Fundamental Theorem of Lebesgue Integral Calculus with Weak Derivative} \cite[Corollary 4.1.5]{yixing_multiplicative_2025}. 
+\end{prop}
+Also, with the previous results of weak derivative calculus, we are able to simplify (c):
+\begin{prop}\cite[Corollary 4.1.7]{yixing_multiplicative_2025}
+    Given any $p \in [1,\infty], ~ u \in \Sobo{2,\infty}{}{a,b}$ for some $a,b \in \bR$. We have that $\frac{1}{u}$ lies in $\Sobo{2,\infty}{}{a,b}$ if and only if $\frac{1}{u} \in \Leb{\infty}{}{a,b}$; namely, $u$ is bounded away from $0$. In this case,  $u$ does not change sign. 
+\end{prop}
+
+We thus have the following result.
+\begin{thm}
+\label{Necessary and Sufficient Condition for Transformation}
+\cite[Theorem~4.1.8]{yixing_multiplicative_2025}
+    Given $y_0, y_d \in L^2(0,1)$, and $T > 0$. We have that there is a control $\alpha \in \Sobo{1, \infty}{}{0,1}$ such that the solution to \eqref{eqn:base_reaction_term} satisfies \eqref{eqn:exact control through Advection Term} if and only if there are $\beta \in \Leb{\infty}{}{0,1}, q(0), q_x(0) \in \bR$ such that the solution to~\eqref{eqn:base_reaction_term} with control $\beta$ satisfies \eqref{condition:a-control through reaction term}, where $q \in \Sobo{2, \infty}{}{0,1}$ is the unique solution (given by Carathéodory's Existence Theorem) to \eqref{condition:b-relationship between q and beta}, satisfying 
+    \begin{equation}
+    \label{condition:c-q is bounded away from 0}
+        \frac{1}{q} \in \Leb{\infty}{}{0,1}.
+    \end{equation}
+    In this case, $u(x, t) = y(x,t)q(x) ~\ale$, and $\alpha = 2\frac{q_x}{q}$.
+\end{thm}
+
+In particular, when (\ref{condition:c-q is bounded away from 0}) holds, $$u(x,t) = q(x)y(x,t) = 0 \iff y(x, t) = 0.$$ 
+Namely, homogeneous Dirichlet boundary condition is satisfied for $u$ if and only if it is satisfied for $y$. Thus, the above result establishes a transformation between system (\ref{sys:base_advection_term}) and system (\ref{sys:base_reaction_term}).
+We can thus achieve a sufficient condition for the transformation of approximate control.
+
+\begin{cor}
+\label{Sufficient Condition for Transformation of Approximate Control}
+    \cite[Corollary~4.1.9]{yixing_multiplicative_2025}
+    Given $y_0, y_d \in L^2(0,1)$, and $\epsilon > 0, ~ T > 0$. Suppose there are $\beta \in \Leb{\infty}{}{0,1}, q(0), q_x(0)\in \bR, M > 0$ such that the solution $u(\cdot, t) \in \SoboH{2}{}{0,1}$ to \eqref{eqn:base_reaction_term}, with initial condition $u(\cdot, 0) = y_0q$ and control $\beta$, satisfies   
+    \begin{equation}
+    \label{eqn:reduced approximate control through reaction term}
+        \norm{u(\cdot, T) - y_dq}_\Leb{2}{}{0,1} < \frac{\epsilon}{M},
+    \end{equation}
+    where $q \in \Sobo{2, \infty}{}{0,1}$ is the unique solution (given by Carathéodory's Existence Theorem) to \eqref{condition:b-relationship between q and beta}, and 
+    \begin{equation}
+        \norm{\frac{1}{q}}_\infty < M.
+    \end{equation}
+    We have that the solution $y(\cdot, t) \in \SoboH{2}{}{0,1}$ to \eqref{eqn:base_reaction_term} with the control $\alpha := 2\frac{q_x}{q} \in \Sobo{1,\infty}{}{0,1}$ satisfies   
+    \begin{equation}
+    \label{eqn:approximate control}
+        \norm{y(\cdot, T) - y_d} < \epsilon.
+    \end{equation}
+\end{cor}
+\begin{pf}    
+    The proof follows directly from Theorem 21. The only thing we need to check is the estimate \eqref{eqn:approximate control}.
+    
+    Suppose $\norm{u(\cdot, T) - y_dq}_\Leb{2}{}{0,1} < \frac{\epsilon}{M}$.     
+    As before, take $y(x, t) := u(x, t)\frac{1}{q(x)}$. We have
+    \begin{multline*}
+        \norm{y(\cdot, T) - y_d}_\Leb{2}{}{0,1}^2 \\        
+        = \int_0^1\abs{\frac{1}{q(x)}\rndbracket{u(x, T) - y_d(x)q(x)}}^2dx\\
+        \leq \norm{\frac{1}{q}}_\Leb{\infty}{}{0,1}^2\norm{u(\cdot, T) - y_dq}_\Leb{2}{}{0,1}^2\\
+        < \norm{\frac{1}{q}}_\Leb{\infty}{}{0,1}^2\rndbracket{\frac{\epsilon}{M}}^2
+        \leq \epsilon^2.
+    \end{multline*}
+    \qed
+\end{pf}
+
+The above Corollary reduces Problem \ref{prob:1D-advection} to Problem \ref{prob:1D-reaction} and to finding appropriate initial conditions for $q$. One may design an algorithm that picks a certain $q_0 \in \Sobo{2,\infty}{}{0,1}$ that is bounded away from $0$, find a control $\beta_0$ to achieve \eqref{eqn:reduced approximate control through reaction term} with $q_0$ (which is possible for any $M$ by Theorem \ref{khapalov: reaction control 1D}). Find $q_1$ such that (\ref{condition:b-relationship between q and beta}) holds with $\beta_0$, and then find $\beta_1$ that solves (\ref{eqn:reduced approximate control through reaction term}) with $q_1$. Recursively, one constructs a sequence of $(q_i, \beta_i)$ that solves (\ref{eqn:reduced approximate control through reaction term}), with $(q_{i+1}, \beta_i)$ solving (\ref{condition:b-relationship between q and beta}).
+
+
+\begin{algorithm}[h]
+\label{alg:recursive control}
+
+\textbf{Data:}
+Initial state $y_0 \in \Leb{2}{}{0,1}$, target state $y_d \in \Leb{2}{}{0,1}$,
+with $y_0 \ge 0$, $y_d \ge 0$, tolerance $\epsilon > 0$.
+
+\textbf{Result:}
+Multiplicative control $\alpha$ for Problem \ref{prob:1D-advection}.
+
+\begin{enumerate}[label=\arabic*.]
+\item Choose $q \in \Sobo{2,\infty}{}{0,1}$ such that $q$ is bounded away from $0$.
+\item Compute $M \gets \norm{1/q}_{\Leb{\infty}{}{0,1}}$.
+\item Set $u_0 \gets y_0 q$, $u_d \gets y_d q$, and $\epsilon_0 \gets \epsilon / M$.
+
+\item Repeat until $\norm{u(\cdot,T) - u_d}_{\Leb{2}{}{0,1}} < \epsilon_0$:
+  \begin{enumerate}[label=\roman*.]
+  \item Compute a control $\beta$ for Problem \ref{prob:1D-reaction} such that
+  $\norm{u(\cdot,T) - u_d}_{\Leb{2}{}{0,1}} < \epsilon_0$.
+  \item Select admissible values for $q(0)$ and $q'(0)$.
+  \item Update $q$ as the solution of
+  (\ref{condition:b-relationship between q and beta}).
+  \item Update $M \gets \norm{1/q}_{\Leb{\infty}{}{0,1}}$.
+  \item Update $u_0 \gets y_0 q$, $u_d \gets y_d q$, and
+  $\epsilon_0 \gets \epsilon / M$.
+  \item Compute $u$ as the solution of
+  (\ref{sys:base_reaction_term}).
+  \end{enumerate}
+
+\item Return $\alpha \gets q_x / q$.
+\end{enumerate}
+
+\end{algorithm}
+
+
+
+An interesting study would be to determine for which $\beta$ there exists $q$ that satisfies (\ref{condition:b-relationship between q and beta}) and (\ref{condition:c-q is bounded away from 0}).
+This would provide a criterion for identifying which type of control $\beta$ through the Reaction Term can be transformed into a control $\alpha$ through the Advection Term using the above algorithm.
+
+In particular, it would be desirable if the $q_i$'s were uniformly bounded away from 0 by a fixed $\frac{1}{M}$ for the corresponding family of $\beta_i$'s, which would yield the approximate controllability we seek.
+
+\section{Conclusion}
+
+In conclusion, we established a transform between the multiplicative control through the reaction term and the multiplicative control through the advection term, using some variation of useful results on weak derivatives. With the transformation, we proposed an algorithm that will exploit the approximate controllability through the reaction term to achieve control through the advection term.
+
+There are several possible directions that may follow this research. First, we can study the ODE (\ref{condition:b-relationship between q and beta}) more carefully to conclude about the convergence of the algorithm \ref{alg:recursive control}. Second, it would be interesting to generalize the transformation to higher dimensions and see if similar results will apply. Third, we can further weaken the requirement, and only require the solution to be a weak solution to the system (instead of a strong solution in terms of weak derivatives, as is currently done). Lastly, we can try to impose different boundary conditions and analyze how the transform would behave in those cases.
+
+\begin{ack}
+I would like to thank my supervisor, Professor Roberto Guglielmi, for his invaluable guidance, encouragement, and support throughout the research process.
+\end{ack}
+
+% \section*{DECLARATION OF GENERATIVE AI AND AI-ASSISTED TECHNOLOGIES IN THE WRITING PROCESS}
+% During the preparation of this work the author(s) used ChatGPT in order to search for reference and existing results on the topic. After using this tool/service, the author(s) reviewed and edited the content as needed and take(s) full responsibility for the content of the publication.
+
+\bibliography{references}   % bib file to produce the bibliography
+                                                     % with bibtex (preferred)
+                                                   
+%\begin{thebibliography}{xx}  % you can also add the bibliography by hand
+
+%\bibitem[Able(1956)]{Abl:56}
+%B.C. Able.
+%\newblock Nucleic acid content of microscope.
+%\newblock \emph{Nature}, 135:\penalty0 7--9, 1956.
+
+%\bibitem[Able et~al.(1954)Able, Tagg, and Rush]{AbTaRu:54}
+%B.C. Able, R.A. Tagg, and M.~Rush.
+%\newblock Enzyme-catalyzed cellular transanimations.
+%\newblock In A.F. Round, editor, \emph{Advances in Enzymology}, volume~2, pages
+%  125--247. Academic Press, New York, 3rd edition, 1954.
+
+%\bibitem[Keohane(1958)]{Keo:58}
+%R.~Keohane.
+%\newblock \emph{Power and Interdependence: World Politics in Transitions}.
+%\newblock Little, Brown \& Co., Boston, 1958.
+
+%\bibitem[Powers(1985)]{Pow:85}
+%T.~Powers.
+%\newblock Is there a way out?
+%\newblock \emph{Harpers}, pages 35--47, June 1985.
+
+%\bibitem[Soukhanov(1992)]{Heritage:92}
+%A.~H. Soukhanov, editor.
+%\newblock \emph{{The American Heritage. Dictionary of the American Language}}.
+%\newblock Houghton Mifflin Company, 1992.
+
+%\end{thebibliography}
+
+\end{document}
